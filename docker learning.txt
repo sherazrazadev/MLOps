@@ -1,0 +1,117 @@
+1- docker --version
+2-
+Step 2: Write a Dockerfile
+The Dockerfile is the blueprint for building your Docker container. Here’s an example Dockerfile tailored for your Python project with LLM APIs:
+```
+# Use a lightweight Python base image
+FROM python:3.9-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the current directory contents to the working directory
+COPY . .
+
+# Install project dependencies from requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the port on which the API runs
+EXPOSE 8000
+
+# Command to start your application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+```
+
+
+
+Step 3: Build the Docker Image
+```
+docker build -t your_project_name .
+```
+Step 4: Run the Docker Container
+
+```
+docker run -d -p 8000:8000 your_project_name
+```
+
+
+# others commands
+1- if want to remove the previouse image or cache files use this 
+ (to clear the previouse images which are unused)
+```
+docker system prune 
+```
+
+2- To see containers that are currently running:
+```
+docker ps
+```
+
+3- To list all containers, including both active and stopped ones:
+```
+docker ps -a
+```
+
+4- To filter and see just the stopped (unused) containers:
+```
+docker ps -f "status=exited"
+```
+5-If you identify containers you no longer need (e.g., stopped ones), you can remove them:
+Remove a specific container:
+```
+docker rm <container_id>
+```
+
+6- Remove all stopped containers:
+```
+docker container prune
+```
+
+## docker run -d -p 8002:8000 apolo-docker-test2
+1. docker run
+This command creates and starts a new container from a specified Docker image.
+2. -d (Detached Mode)
+The -d flag tells Docker to run the container in detached mode, meaning the container runs in the background without tying up your terminal.
+
+Without -d, Docker would run the container in the foreground and display logs directly in your terminal.
+3. -p 8002:8000 (Port Mapping)
+The -p flag maps a host machine port to a container port.
+
+Format:
+```
+-p <host_port>:<container_port>
+```
+In your command:
+# 8002 is define in docker file EXPOSE 8002
+8002 is the host port—the port on your machine where you access the application (e.g., http://localhost:8002).
+
+8000 is the container port—the port inside the container where your application is running.
+
+This means that requests to http://localhost:8002 on the host machine will be forwarded to port 8000 in the container.
+
+4. apolo-docker-test2 (Image Name)
+This specifies the Docker image to be used for creating the container.
+
+
+
+
+
+###########################################################################################################
+#docker multi stage
+2. Multi-Stage Builds
+Separate the build process from the runtime environment to reduce the size of the final image:
+
+```
+# Stage 1: Build
+FROM python:3.10 as builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.10-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY . .
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
